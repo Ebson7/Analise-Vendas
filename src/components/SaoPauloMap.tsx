@@ -301,38 +301,51 @@ export default function SaoPauloMap({
                       onMouseLeave={() => setHoveredSeller(null)}
                       className="cursor-pointer group select-none pointer-events-auto"
                     >
-                      {/* Interactive ring highlight on hover/selection */}
-                      <circle
+                      {/* Glowing red bottom anchor pulse */}
+                      <ellipse
                         cx={coords.x}
                         cy={coords.y}
-                        r={isSelected ? "18" : isHovered ? "14" : "10"}
+                        rx={isSelected ? "12" : isHovered ? "9" : "6"}
+                        ry={isSelected ? "5" : isHovered ? "3.5" : "2.5"}
                         className={`transition-all duration-300 ${
                           isSelected
-                            ? "fill-blue-500/35 stroke-blue-400 stroke-2 animate-pulse"
-                            : "fill-blue-500/10 hover:fill-blue-500/25 stroke-none"
+                            ? "fill-red-500/40 animate-pulse"
+                            : isHovered
+                            ? "fill-red-500/25"
+                            : "fill-red-500/15"
                         }`}
                       />
 
-                      {/* Concentric locator dot */}
-                      <circle
-                        cx={coords.x}
-                        cy={coords.y}
-                        r={isSelected ? "7" : "5"}
+                      {/* Premium Vector Red Location Pin Shape centered at coords */}
+                      <path
+                        d={`M ${coords.x} ${coords.y}
+                            C ${coords.x - 7} ${coords.y - 12} ${coords.x - 10} ${coords.y - 20} ${coords.x - 10} ${coords.y - 24}
+                            A 10 10 0 0 1 ${coords.x + 10} ${coords.y - 24}
+                            C ${coords.x + 10} ${coords.y - 20} ${coords.x + 7} ${coords.y - 12} ${coords.x} ${coords.y}
+                            Z`}
                         className={`transition-all duration-300 ${
                           isSelected
-                            ? "fill-blue-400 shadow-[0_0_12px_#3b82f6]"
+                            ? "fill-red-500 stroke-red-200 stroke-[1.5] drop-shadow-[0_0_12px_rgba(239,68,68,0.95)]"
                             : isHovered
-                            ? "fill-blue-300 animate-pulse"
-                            : "fill-blue-500 group-hover:fill-blue-400"
+                            ? "fill-red-500 stroke-white stroke-[1.5] drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                            : "fill-red-600 stroke-red-900/40 stroke-1 drop-shadow-[0_0_4px_rgba(220,38,38,0.4)]"
                         }`}
+                      />
+
+                      {/* Location Pin Core Center Dot */}
+                      <circle
+                        cx={coords.x}
+                        cy={coords.y - 24}
+                        r="3"
+                        className="fill-white"
                       />
 
                       {/* Display label with thick text contrast shadows against map background */}
                       <text
-                        x={coords.x + 12}
-                        y={coords.y + 4}
+                        x={coords.x + 14}
+                        y={coords.y - 20}
                         className={`pointer-events-none transition-all duration-300 fill-slate-200 font-mono text-[10px] font-bold tracking-tight ${
-                          isSelected || isHovered ? "opacity-100 scale-105 fill-blue-300" : "opacity-0"
+                          isSelected || isHovered ? "opacity-100 scale-105 fill-red-300 font-extrabold" : "opacity-0"
                         }`}
                         style={{
                           textShadow: "1px 1px 3px rgba(0,0,0,0.95), -1px -1px 3px rgba(0,0,0,0.95), 1px -1px 3px rgba(0,0,0,0.95), -1px 1px 3px rgba(0,0,0,0.95)"

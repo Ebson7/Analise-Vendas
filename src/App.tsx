@@ -43,6 +43,8 @@ import { SellerRecord, MarketAnalysis } from "./types";
 import PresentationView from "./components/PresentationView";
 import SaoPauloMap from "./components/SaoPauloMap";
 import { generateLocalAnalysis } from "./utils";
+import { collection, onSnapshot, doc, setDoc, deleteDoc, getDocFromServer } from "firebase/firestore";
+import { db, handleFirestoreError, OperationType } from "./firebase";
 
 // Setup stable mock data initially if none exists in localStorage
 const DEFAULT_SELLERS: SellerRecord[] = [
@@ -140,37 +142,85 @@ const DEFAULT_SELLERS: SellerRecord[] = [
 
 export default function App() {
   // Sellers state
-  const [sellers, setSellers] = useState<SellerRecord[]>(() => {
-    const saved = localStorage.getItem("regional_sellers_tracker");
-    let loaded: SellerRecord[];
-    if (saved) {
+  const [sellers, setSellers] = useState<SellerRecord[]>([]);
+  const [isLoadingSellers, setIsLoadingSellers] = useState(true);
+
+  // Validate Connection to Firestore on startup
+  useEffect(() => {
+    async function testConnection() {
       try {
-        loaded = JSON.parse(saved);
-      } catch (e) {
-        loaded = DEFAULT_SELLERS;
+        await getDocFromServer(doc(db, "test", "connection"));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("the client is offline")) {
+          console.error("Please check your Firebase configuration.");
+        }
       }
-    } else {
-      loaded = DEFAULT_SELLERS;
     }
-    // Automatically enforce calculated estimatedTotalMarketSize = Math.round(estimatedPopulation / 300)
-    return loaded.map((s) => {
-      if (s.analysis && s.analysis.estimatedPopulation) {
-        return {
-          ...s,
-          analysis: {
-            ...s.analysis,
-            estimatedTotalMarketSize: Math.round(s.analysis.estimatedPopulation / 300) || 1
+    testConnection();
+  }, []);
+
+  // Sync with Firestore in real-time
+  useEffect(() => {
+    const sellersCol = collection(db, "sellers");
+    
+    const unsubscribe = onSnapshot(
+      sellersCol,
+      async (snapshot) => {
+        let list: SellerRecord[] = [];
+        snapshot.forEach((docSnap) => {
+          list.push(docSnap.data() as SellerRecord);
+        });
+
+        if (list.length === 0) {
+          try {
+            // Write pre-filled demo sellers to database so it isn't empty initially
+            for (const d of DEFAULT_SELLERS) {
+              await setDoc(doc(db, "sellers", d.id), d);
+            }
+          } catch (writeErr) {
+            handleFirestoreError(writeErr, OperationType.WRITE, "sellers");
           }
-        };
+        } else {
+          // Sort by createdAt descending
+          list.sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+
+          // Enforce formula
+          const processed = list.map((s) => {
+            if (s.analysis && s.analysis.estimatedPopulation) {
+              return {
+                ...s,
+                analysis: {
+                  ...s.analysis,
+                  estimatedTotalMarketSize: Math.round(s.analysis.estimatedPopulation / 300) || 1
+                }
+              };
+            }
+            return s;
+          });
+
+          setSellers(processed);
+          setIsLoadingSellers(false);
+          
+          setSelectedSellerId((current) => {
+            if (!current || !processed.some(s => s.id === current)) {
+              return processed.length > 0 ? processed[0].id : "";
+            }
+            return current;
+          });
+        }
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, "sellers");
       }
-      return s;
-    });
-  });
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   // Selected Seller state
-  const [selectedSellerId, setSelectedSellerId] = useState<string>(
-    sellers.length > 0 ? sellers[0].id : ""
-  );
+  const [selectedSellerId, setSelectedSellerId] = useState<string>("");
 
   // Presentation State
   const [showPresentation, setShowPresentation] = useState(false);
@@ -211,11 +261,6 @@ export default function App() {
 
   // Local Action checklist status tracker (persisted temporarily in memory or relative to active record)
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
-
-  // Sync with localStorage
-  useEffect(() => {
-    localStorage.setItem("regional_sellers_tracker", JSON.stringify(sellers));
-  }, [sellers]);
 
   // Handle active seller changes - reset local checkboxes
   useEffect(() => {
@@ -295,19 +340,23 @@ export default function App() {
           analysis: generated
         };
 
-        setSellers((prev) => [newRecord, ...prev]);
-        setSelectedSellerId(newRecord.id);
-        setShowAddModal(false);
+        try {
+          await setDoc(doc(db, "sellers", newRecord.id), newRecord);
+          setSelectedSellerId(newRecord.id);
+          setShowAddModal(false);
 
-        // Reset form
-        setFormData({
-          sellerName: "",
-          phone: "",
-          city: "",
-          currentClients: 1,
-          segment: "Varejo Geral"
-        });
-        setCustomSegment("");
+          // Reset form
+          setFormData({
+            sellerName: "",
+            phone: "",
+            city: "",
+            currentClients: 1,
+            segment: "Varejo Geral"
+          });
+          setCustomSegment("");
+        } catch (writeErr) {
+          handleFirestoreError(writeErr, OperationType.WRITE, `sellers/${newRecord.id}`);
+        }
       } catch (err: any) {
         console.error(err);
         setApiError("Erro ao calcular dados de mercado locally.");
@@ -357,19 +406,23 @@ export default function App() {
         analysis: rawAnalysis
       };
 
-      setSellers((prev) => [newRecord, ...prev]);
-      setSelectedSellerId(newRecord.id);
-      setShowAddModal(false);
+      try {
+        await setDoc(doc(db, "sellers", newRecord.id), newRecord);
+        setSelectedSellerId(newRecord.id);
+        setShowAddModal(false);
 
-      // Reset form
-      setFormData({
-        sellerName: "",
-        phone: "",
-        city: "",
-        currentClients: 1,
-        segment: "Varejo Geral"
-      });
-      setCustomSegment("");
+        // Reset form
+        setFormData({
+          sellerName: "",
+          phone: "",
+          city: "",
+          currentClients: 1,
+          segment: "Varejo Geral"
+        });
+        setCustomSegment("");
+      } catch (writeErr) {
+        handleFirestoreError(writeErr, OperationType.WRITE, `sellers/${newRecord.id}`);
+      }
     } catch (error: any) {
       console.warn("API Error, falling back to local simulation:", error);
       
@@ -398,19 +451,23 @@ export default function App() {
           analysis: fallbackData
         };
 
-        setSellers((prev) => [newRecord, ...prev]);
-        setSelectedSellerId(newRecord.id);
-        setShowAddModal(false);
+        try {
+          await setDoc(doc(db, "sellers", newRecord.id), newRecord);
+          setSelectedSellerId(newRecord.id);
+          setShowAddModal(false);
 
-        // Reset form
-        setFormData({
-          sellerName: "",
-          phone: "",
-          city: "",
-          currentClients: 1,
-          segment: "Varejo Geral"
-        });
-        setCustomSegment("");
+          // Reset form
+          setFormData({
+            sellerName: "",
+            phone: "",
+            city: "",
+            currentClients: 1,
+            segment: "Varejo Geral"
+          });
+          setCustomSegment("");
+        } catch (writeErr) {
+          handleFirestoreError(writeErr, OperationType.WRITE, `sellers/${newRecord.id}`);
+        }
       } catch (fallbackError) {
         setApiError(
           "Não foi possível processar a consulta de IA e a geração alternativa local falhou."
@@ -421,14 +478,12 @@ export default function App() {
     }
   };
 
-  const handleDeleteSeller = (id: string, name: string) => {
+  const handleDeleteSeller = async (id: string, name: string) => {
     if (confirm(`Deseja realmente excluir a análise comercial do vendedor ${name}?`)) {
-      const updated = sellers.filter((s) => s.id !== id);
-      setSellers(updated);
-      if (selectedSellerId === id && updated.length > 0) {
-        setSelectedSellerId(updated[0].id);
-      } else if (updated.length === 0) {
-        setSelectedSellerId("");
+      try {
+        await deleteDoc(doc(db, "sellers", id));
+      } catch (deleteErr) {
+        handleFirestoreError(deleteErr, OperationType.DELETE, `sellers/${id}`);
       }
     }
   };
@@ -512,9 +567,9 @@ export default function App() {
               <Compass className="h-5.5 w-5.5 stroke-[2.2] text-white animate-spin" style={{ animationDuration: '30s' }} />
             </div>
             <div>
-              <span className="text-[10px] font-bold tracking-widest uppercase text-blue-450 block leading-tight">Live Demographic Sync</span>
+              <span className="text-[10px] font-bold tracking-widest uppercase text-blue-450 block leading-tight">Painel de Expansão</span>
               <h1 className="text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
-                MARKET POTENTIAL ANALYTICS
+                GESTÃO DE VENDAS MARCIO SANCHEZ
               </h1>
             </div>
           </div>

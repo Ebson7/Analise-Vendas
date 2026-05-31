@@ -1,0 +1,25 @@
+{
+  "entities": {
+    "SellerRecord": {
+      "title": "SellerRecord",
+      "description": "Represents a seller register and their curated target city market analysis.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "phone": { "type": "string" },
+        "city": { "type": "string" },
+        "segment": { "type": "string" },
+        "currentClients": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "sellerName", "city", "segment", "currentClients", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/sellers/{sellerId}": {
+      "schema": "SellerRecord",
+      "description": "The collection of registered sellers and their target analysis records."
+    }
+  }
+}

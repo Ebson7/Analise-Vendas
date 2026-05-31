@@ -33,6 +33,7 @@ export default function PresentationView({
 }: PresentationViewProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [viewMode, setViewMode] = useState<"slides" | "scroll">("slides");
+  const [showPdfTip, setShowPdfTip] = useState(true);
 
   const analysis = seller.analysis ? {
     ...seller.analysis,
@@ -207,7 +208,7 @@ export default function PresentationView({
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-bold text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] px-4 py-2.5 transition cursor-pointer active:scale-95"
           >
             <Printer className="h-4.5 w-4.5" />
-            PDF / Imprimir
+            Exportar para PDF
           </button>
 
           <button
@@ -219,6 +220,24 @@ export default function PresentationView({
           </button>
         </div>
       </div>
+
+      {/* PDF Export Guidance Banner (Hidden on print) */}
+      {showPdfTip && (
+        <div className="print-hide max-w-6xl mx-auto mb-6 flex items-center justify-between gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3 text-xs text-slate-350">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4.5 w-4.5 text-blue-400 shrink-0" />
+            <span>
+              <strong>Dica de PDF:</strong> No menu de impressão do navegador, mude o destino para <strong>"Salvar como PDF"</strong> e lembre-se de ativar <strong>"Gráficos de segundo plano"</strong> para preservar o design premium original.
+            </span>
+          </div>
+          <button
+            onClick={() => setShowPdfTip(false)}
+            className="p-1 cursor-pointer text-slate-400 hover:text-white rounded-lg transition shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Screen Slide Navigation Dots (Hidden on Print & Scroll View) */}
       {viewMode === "slides" && (
