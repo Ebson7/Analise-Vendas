@@ -4,7 +4,7 @@ export interface MarketAnalysis {
   gdpPerCapita: string;
   mainSectors: string[];
   estimatedTotalMarketSize: number; // Potential target clients in this city
-  expansionScore: number; // 0 to 100
+  expansionScore?: number; // 0 to 100
   expansionDifficulty: "Baixa" | "Média" | "Alta" | string;
   growthRateEstimate: string;
   nicheRecommendations: string[];

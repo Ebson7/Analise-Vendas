@@ -397,13 +397,7 @@ export default function SaoPauloMap({
                           <span className="text-[10px] text-slate-500 block">TAM (NICHOS)</span>
                           <span className="text-xs font-bold text-cyan-400">{hoveredSeller.analysis.estimatedTotalMarketSize} coops</span>
                         </div>
-                        <div className="h-8 w-px bg-white/10" />
-                        <div className="text-left font-mono">
-                          <span className="text-[10px] text-slate-500 block">SCORE EXPANSÃO</span>
-                          <span className="text-xs font-bold text-emerald-400">
-                            {hoveredSeller.analysis.expansionScore}/100
-                          </span>
-                        </div>
+
                       </>
                     )}
                   </div>
@@ -459,21 +453,7 @@ export default function SaoPauloMap({
                       </span>
                     </div>
 
-                    {/* Expansion score bar */}
-                    <div className="border-t border-white/5 pt-2 mt-1">
-                      <div className="flex justify-between items-center text-[9px] text-slate-550 mb-1 font-bold uppercase">
-                        <span>Score de Penetração</span>
-                        <span className="text-emerald-400 font-bold leading-none">
-                          {activeSeller.analysis.expansionScore}/100
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className="h-full bg-emerald-500 rounded-full"
-                          style={{ width: `${activeSeller.analysis.expansionScore}%` }}
-                        />
-                      </div>
-                    </div>
+
                   </div>
                 )}
               </div>
@@ -621,13 +601,7 @@ export default function SaoPauloMap({
                   </span>
                 </div>
 
-                <div className="h-8 w-px bg-white/10 hidden xl:block" />
-                <div className="text-left font-mono bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-xs">
-                  <span className="text-[9px] text-slate-500 block uppercase">Expansividade</span>
-                  <span className="font-bold text-emerald-400 leading-none">
-                    {activeSeller.analysis.expansionScore}/100
-                  </span>
-                </div>
+
 
                 <div className="h-8 w-px bg-white/10 hidden xl:block" />
                 <div className="text-left font-mono bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-xs max-w-[200px] truncate">

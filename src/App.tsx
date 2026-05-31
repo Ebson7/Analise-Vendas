@@ -1021,7 +1021,7 @@ export default function App() {
                     /* The loaded dynamic report from server */
                     <React.Fragment>
                       {/* Metric Cards Grid */}
-                      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         {/* 1. Population Card */}
                         <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-sm transition-all hover:bg-white/10">
                           <div className="flex items-center gap-2 text-slate-400">
@@ -1066,21 +1066,6 @@ export default function App() {
                             </h4>
                             <p className="text-[10px] text-slate-500 mt-1">cobertura de clientes conquistados</p>
                           </div>
-                        </div>
-
-                        {/* 4. Score Potential Card */}
-                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-sm transition-all hover:bg-white/10">
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <Gauge className="h-4 w-4 text-pink-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 leading-none">Score Expansão</span>
-                          </div>
-                          <div className="mt-3 flex items-baseline gap-0.5">
-                            <h4 className={`text-base font-bold font-mono leading-none sm:text-lg ${getScoreColor(activeSeller.analysis.expansionScore)}`}>
-                              {activeSeller.analysis.expansionScore}
-                            </h4>
-                            <span className="text-[10px] text-slate-500 font-bold">/100</span>
-                          </div>
-                          <div className="text-[10px] text-slate-500 mt-1 font-medium">Viabilidade Geral</div>
                         </div>
                       </div>
 

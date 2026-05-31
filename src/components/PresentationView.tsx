@@ -354,18 +354,6 @@ export default function PresentationView({
                       <div className="flex justify-between items-center border-b border-white/5 pb-3">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Indicadores Principais</span>
                       </div>
-                      <div>
-                        <span className="text-[10px] text-slate-450 uppercase tracking-wider block font-mono">Score Viabilidade</span>
-                        <div className="flex items-baseline gap-1 mt-1">
-                          <span
-                            className="text-4xl font-extrabold font-mono"
-                            style={{ color: getScoreColorHex(analysis.expansionScore) }}
-                          >
-                            {analysis.expansionScore}
-                          </span>
-                          <span className="text-xs text-slate-500 font-bold">/100</span>
-                        </div>
-                      </div>
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         <div className="bg-black/25 rounded-xl p-3 border border-white/5 print:bg-white print:border-slate-200">
                           <span className="text-[9px] text-slate-500 block uppercase font-mono">Dificuldade</span>
