@@ -24,7 +24,8 @@ import {
   CheckSquare,
   Square,
   FileText,
-  Phone
+  Phone,
+  Pencil
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -255,6 +256,22 @@ export default function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // States for editing a seller
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSellerId, setEditingSellerId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    sellerName: "",
+    phone: "",
+    city: "",
+    currentClients: 1,
+    segment: "Varejo Geral"
+  });
+  const [editCustomSegment, setEditCustomSegment] = useState("");
+  const [editUseAI, setEditUseAI] = useState(false);
+  const [isEditingAnalyzing, setIsEditingAnalyzing] = useState(false);
+  const [editAnalysisStep, setEditAnalysisStep] = useState(0);
+  const [editApiError, setEditApiError] = useState<string | null>(null);
 
   // Search query filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -488,6 +505,186 @@ export default function App() {
     }
   };
 
+  // Add edit handlers
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isEditingAnalyzing) {
+      interval = setInterval(() => {
+        setEditAnalysisStep((prev) => (prev + 1) % 4);
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [isEditingAnalyzing]);
+
+  const handleEditSellerClick = (seller: SellerRecord) => {
+    setEditingSellerId(seller.id);
+    setEditFormData({
+      sellerName: seller.sellerName,
+      phone: seller.phone || "",
+      city: seller.city,
+      currentClients: seller.currentClients,
+      segment: SEGMENTS.includes(seller.segment) ? seller.segment : "Outro (Personalizado)"
+    });
+    setEditCustomSegment(SEGMENTS.includes(seller.segment) ? "" : seller.segment);
+    setEditUseAI(false); // Default to local for fast edits, user can toggle to AI
+    setEditApiError(null);
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSellerId) return;
+
+    if (!editFormData.sellerName || !editFormData.city) {
+      alert("Por favor, preencha o nome do vendedor e a cidade de atuação.");
+      return;
+    }
+
+    const finalSegment =
+      editFormData.segment === "Outro (Personalizado)" ? editCustomSegment || "Geral" : editFormData.segment;
+
+    setIsEditingAnalyzing(true);
+    setEditAnalysisStep(0);
+    setEditApiError(null);
+
+    // Get original creator date
+    const originalSeller = sellers.find(s => s.id === editingSellerId);
+    const createdAt = originalSeller ? originalSeller.createdAt : new Date().toISOString();
+
+    // If LOCAL mode (No AI) is selected, generate instantly
+    if (!editUseAI) {
+      try {
+        // Fast progress simulation
+        for (let step = 0; step <= 3; step++) {
+          setEditAnalysisStep(step);
+          await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+
+        const generated = generateLocalAnalysis(
+          editFormData.city,
+          editFormData.sellerName,
+          finalSegment,
+          Number(editFormData.currentClients) || 0
+        );
+
+        const updatedRecord: SellerRecord = {
+          id: editingSellerId,
+          sellerName: editFormData.sellerName,
+          phone: editFormData.phone || "",
+          city: generated.cityName,
+          segment: finalSegment,
+          currentClients: Number(editFormData.currentClients) || 0,
+          createdAt: createdAt,
+          analysis: generated
+        };
+
+        try {
+          await setDoc(doc(db, "sellers", editingSellerId), updatedRecord);
+          setShowEditModal(false);
+          setEditingSellerId(null);
+        } catch (writeErr) {
+          handleFirestoreError(writeErr, OperationType.WRITE, `sellers/${editingSellerId}`);
+        }
+      } catch (err: any) {
+        console.error(err);
+        setEditApiError("Erro ao calcular dados de mercado locally.");
+      } finally {
+        setIsEditingAnalyzing(false);
+      }
+      return;
+    }
+
+    // AI Mode
+    try {
+      const response = await fetch("/api/analyze-market", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          sellerName: editFormData.sellerName,
+          city: editFormData.city,
+          currentClients: editFormData.currentClients,
+          segment: finalSegment
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Erro do servidor (Código: ${response.status}).`
+        );
+      }
+
+      const rawAnalysis: MarketAnalysis = await response.json();
+
+      // Enforce the SP formula: Total population / 300
+      if (rawAnalysis && rawAnalysis.estimatedPopulation) {
+        rawAnalysis.estimatedTotalMarketSize = Math.round(rawAnalysis.estimatedPopulation / 300) || 1;
+      }
+
+      const updatedRecord: SellerRecord = {
+        id: editingSellerId,
+        sellerName: editFormData.sellerName,
+        phone: editFormData.phone || "",
+        city: rawAnalysis.cityName || editFormData.city,
+        segment: finalSegment,
+        currentClients: Number(editFormData.currentClients) || 0,
+        createdAt: createdAt,
+        analysis: rawAnalysis
+      };
+
+      try {
+        await setDoc(doc(db, "sellers", editingSellerId), updatedRecord);
+        setShowEditModal(false);
+        setEditingSellerId(null);
+      } catch (writeErr) {
+        handleFirestoreError(writeErr, OperationType.WRITE, `sellers/${editingSellerId}`);
+      }
+    } catch (error: any) {
+      console.warn("API Error, falling back to local simulation:", error);
+      
+      try {
+        for (let step = 0; step <= 3; step++) {
+          setEditAnalysisStep(step);
+          await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+
+        const fallbackData = generateLocalAnalysis(
+          editFormData.city,
+          editFormData.sellerName,
+          finalSegment,
+          Number(editFormData.currentClients) || 0
+        );
+
+        const updatedRecord: SellerRecord = {
+          id: editingSellerId,
+          sellerName: editFormData.sellerName,
+          phone: editFormData.phone || "",
+          city: fallbackData.cityName,
+          segment: finalSegment,
+          currentClients: Number(editFormData.currentClients) || 0,
+          createdAt: createdAt,
+          analysis: fallbackData
+        };
+
+        try {
+          await setDoc(doc(db, "sellers", editingSellerId), updatedRecord);
+          setShowEditModal(false);
+          setEditingSellerId(null);
+        } catch (writeErr) {
+          handleFirestoreError(writeErr, OperationType.WRITE, `sellers/${editingSellerId}`);
+        }
+      } catch (fallbackError) {
+        setEditApiError(
+          "Não foi possível processar a consulta de IA e a geração alternativa local falhou."
+        );
+      }
+    } finally {
+      setIsEditingAnalyzing(false);
+    }
+  };
+
   // Toggle strategic action lists checked items
   const toggleStep = (index: number) => {
     setCompletedSteps((prev) => ({
@@ -714,16 +911,29 @@ export default function App() {
                               </div>
                             </div>
 
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteSeller(seller.id, seller.sellerName);
-                              }}
-                              className="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-white/5 transition-colors"
-                              title="Remover análise"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditSellerClick(seller);
+                                }}
+                                className="text-slate-500 hover:text-blue-400 p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                                title="Editar dados"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSeller(seller.id, seller.sellerName);
+                                }}
+                                className="text-slate-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                                title="Remover análise"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
 
                           <div className="mt-3.5 flex items-center justify-between border-t border-white/5 pt-2.5 text-[11px] text-slate-400">
@@ -781,6 +991,15 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3.5 self-start sm:self-center shrink-0">
+                      <button
+                        onClick={() => handleEditSellerClick(activeSeller)}
+                        className="inline-flex shrink-0 items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-slate-100 rounded-xl px-4 py-2 text-center text-xs font-bold transition-all cursor-pointer active:scale-95"
+                        title="Editar Informações do Vendedor"
+                      >
+                        <Pencil className="h-4 w-4 mr-1.5 text-slate-400" />
+                        Editar Vendedor
+                      </button>
+
                       {activeSeller.analysis && (
                         <button
                           onClick={() => setShowPresentation(true)}
@@ -1203,6 +1422,213 @@ export default function App() {
                   >
                     {!useAI ? <Store className="h-4 w-4 text-white" /> : <Sparkles className="h-4 w-4 text-white" />}
                     {!useAI ? "Cadastrar com Mapeamento Local" : "Iniciar Análise Demográfica IA"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Seller Overlay Modal / Slide-over */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0d0e14]/95 p-5 sm:p-6 shadow-2xl backdrop-blur-2xl max-h-[92vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div className="flex items-center gap-2">
+                <Pencil className="h-5 w-5 text-blue-405 animate-pulse text-blue-405" />
+                <h3 className="font-extrabold text-white text-base">Editar Pesquisa demográfica de Mercado</h3>
+              </div>
+              <button
+                onClick={() => {
+                  if (!isEditingAnalyzing) {
+                    setShowEditModal(false);
+                    setEditingSellerId(null);
+                  }
+                }}
+                className="text-slate-400 hover:text-white text-sm font-bold p-1 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+                disabled={isEditingAnalyzing}
+              >
+                ✕
+              </button>
+            </div>
+
+            {editApiError && (
+              <div className="mt-4 flex gap-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 p-3.5 text-rose-300 text-xs">
+                <AlertCircle className="h-5 w-5 shrink-0 text-rose-400" />
+                <div>
+                  <h5 className="font-bold">Ocorreu um erro ao atualizar</h5>
+                  <p className="mt-1 leading-relaxed">{editApiError}</p>
+                </div>
+              </div>
+            )}
+
+            {isEditingAnalyzing ? (
+              /* Beautiful active diagnostic progress interface */
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="relative flex h-16 w-16 items-center justify-center">
+                  <div className="absolute inset-0 animate-spin rounded-full border-4 border-white/10 border-t-blue-500" />
+                  <Sparkles className="h-6 w-6 text-blue-400 animate-bounce" />
+                </div>
+                <h4 className="mt-4 font-bold text-white text-sm">Atualizando Inteligência Demográfica</h4>
+                <p className="mt-2 max-w-sm text-xs text-slate-400 leading-relaxed min-h-[40px] font-mono">
+                  {loadingSteps[editAnalysisStep]}
+                </p>
+                <div className="mt-3 flex gap-1 justify-center width-full justify-between max-w-xs">
+                  {[0, 1, 2, 3].map((step) => (
+                    <div
+                      key={step}
+                      className={`h-1 w-12 rounded-full transition-all duration-300 ${
+                        step <= editAnalysisStep ? "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" : "bg-white/10"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* Form fields */
+              <form onSubmit={handleEditSubmit} className="mt-4 flex flex-col gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Nome do Vendedor</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Lucas Oliveira"
+                    value={editFormData.sellerName}
+                    onChange={(e) => setEditFormData({ ...editFormData, sellerName: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:bg-black/60 focus:outline-none text-white placeholder-slate-600 transition-all font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Telefone de Contato</label>
+                  <input
+                    type="tel"
+                    placeholder="Ex: (11) 99999-9999"
+                    value={editFormData.phone}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:bg-black/60 focus:outline-none text-white placeholder-slate-600 transition-all font-mono"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Cidade Alvo</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Ribeirão Preto - SP"
+                      value={editFormData.city}
+                      onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
+                      className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:bg-black/60 focus:outline-none text-white placeholder-slate-600 transition-all font-mono"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-1 block leading-normal">Insira a cidade acompanhada do Estado para melhores resultados.</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Clientes conquistados</label>
+                    <input
+                      type="number"
+                      min={0}
+                      required
+                      placeholder="Ex: 5"
+                      value={editFormData.currentClients}
+                      onChange={(e) => setEditFormData({ ...editFormData, currentClients: Number(e.target.value) })}
+                      className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:bg-black/60 focus:outline-none text-white placeholder-slate-600 transition-all font-mono"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-1 block leading-normal">Número de pontos comerciais já ativos nesta região.</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Segmento de Negócio</label>
+                  <select
+                    value={editFormData.segment}
+                    onChange={(e) => setEditFormData({ ...editFormData, segment: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:bg-black/60 focus:outline-none text-white select-none transition-all font-mono"
+                  >
+                    {SEGMENTS.map((seg, i) => (
+                      <option key={i} value={seg} className="bg-[#0d0e14] text-white">
+                        {seg}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {editFormData.segment === "Outro (Personalizado)" && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Especifique o Segmento</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Fabricação de Cosméticos, Distribuidora Pet"
+                      value={editCustomSegment}
+                      onChange={(e) => setEditCustomSegment(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:bg-black/60 focus:outline-none text-white placeholder-slate-600 transition-all font-mono"
+                    />
+                  </div>
+                )}
+
+                <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex flex-col gap-2 mt-1">
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Modo de Mapeamento de Edição</span>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditUseAI(false)}
+                      className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                        !editUseAI 
+                          ? "bg-blue-500/10 border-blue-500 text-white" 
+                          : "bg-black/40 border-white/5 text-slate-400 hover:bg-white/5 hover:text-slate-300"
+                      }`}
+                    >
+                      <span className="text-[11px] font-extrabold flex items-center gap-1.5 leading-none">
+                        <Store className="h-3.5 w-3.5 text-blue-400" />
+                        Mapeamento Local
+                      </span>
+                      <span className="text-[9px] text-slate-500 mt-1 leading-normal">Re-calcula na hora com a fórmula local. Super rápido.</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEditUseAI(true)}
+                      className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                        editUseAI 
+                          ? "bg-purple-500/10 border-purple-500 text-white" 
+                          : "bg-black/40 border-white/5 text-slate-400 hover:bg-white/5 hover:text-slate-300"
+                      }`}
+                    >
+                      <span className="text-[11px] font-extrabold flex items-center gap-1.5 leading-none">
+                        <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
+                        Mapeamento por IA
+                      </span>
+                      <span className="text-[9px] text-slate-500 mt-1 leading-normal">Solicita novos insights estruturados com a IA Gemini.</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex gap-3 justify-end border-t border-white/5 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingSellerId(null);
+                    }}
+                    className="rounded-xl border border-white/10 px-4.5 py-2.5 text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-4.5 py-2.5 text-xs font-bold text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] cursor-pointer"
+                  >
+                    {!editUseAI ? <Store className="h-4 w-4 text-white" /> : <Sparkles className="h-4 w-4 text-white" />}
+                    {!editUseAI ? "Salvar com Mapeamento Local" : "Atualizar Análise via IA"}
                   </button>
                 </div>
               </form>

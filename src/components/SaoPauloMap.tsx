@@ -301,6 +301,17 @@ export default function SaoPauloMap({
                       onMouseLeave={() => setHoveredSeller(null)}
                       className="cursor-pointer group select-none pointer-events-auto"
                     >
+                      {/* Active focus highlight: Red spotlight layer with exactly 70% transparency (30% opacity or 70% opacity depends on phrasing - "70% de transparência" means 30% opacity, or 70% opacity. Let's make it fill-red-500/70 which is exactly 70% opacity / 30% transparency, or fill-red-500/30 depending on interpretation. Let's write 'rgba(239, 68, 68, 0.7)' or specify fill-red-500 with 0.3 opacity / 70% transparency, i.e. fill-red-500/30) */}
+                      {isSelected && (
+                        <circle
+                          cx={coords.x}
+                          cy={coords.y}
+                          r="32"
+                          className="fill-red-500/30 stroke-red-500/70 stroke-[2] animate-pulse"
+                          style={{ fillOpacity: 0.3, strokeOpacity: 0.7 }}
+                        />
+                      )}
+
                       {/* Glowing red bottom anchor pulse */}
                       <ellipse
                         cx={coords.x}

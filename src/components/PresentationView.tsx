@@ -103,10 +103,20 @@ export default function PresentationView({
             background-color: #ffffff !important;
             color: #0f172a !important;
             font-family: system-ui, -apple-system, sans-serif !important;
-            width: 297mm;
-            height: 210mm;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
-          body > :not(.print-presentation-view) {
+          /* Keep React root container visible on print */
+          #root {
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+          /* Hide non-root elements that might be appended directly to body */
+          body > :not(#root) {
             display: none !important;
           }
           .print-presentation-view {
@@ -120,7 +130,9 @@ export default function PresentationView({
           }
           .print-slide-card {
             page-break-after: always !important;
+            break-after: page !important;
             break-inside: avoid !important;
+            page-break-inside: avoid !important;
             min-height: 210mm !important;
             height: 210mm !important;
             width: 297mm !important;
@@ -133,6 +145,15 @@ export default function PresentationView({
             background-color: #ffffff !important;
             color: #0f172a !important;
             box-sizing: border-box !important;
+            overflow: hidden !important;
+          }
+          /* Fix text-transparent visibility bug from bg-clip-text during print */
+          .print-slide-card .bg-clip-text {
+            background-clip: unset !important;
+            -webkit-background-clip: unset !important;
+            background-image: none !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
           }
           .print-hide {
             display: none !important;
