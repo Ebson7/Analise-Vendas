@@ -34,7 +34,11 @@ export default function PresentationView({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [viewMode, setViewMode] = useState<"slides" | "scroll">("slides");
 
-  const analysis = seller.analysis;
+  const analysis = seller.analysis ? {
+    ...seller.analysis,
+    estimatedTotalMarketSize: Math.round(seller.analysis.estimatedPopulation / 300) || 1
+  } : null;
+
   if (!analysis) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] border border-white/5 bg-white/5 rounded-2xl p-12 text-center">
@@ -426,13 +430,13 @@ export default function PresentationView({
                       <div className="md:col-span-5 flex flex-col gap-4">
                         <div className="rounded-xl border border-white/5 bg-black/30 p-4.5 print-bg-card">
                           <span className="text-[10px] text-slate-450 uppercase tracking-widest font-mono">
-                            Total Addressable Market (TAM)
+                            Pontos de Venda Potenciais (População / 300)
                           </span>
                           <h3 className="text-3xl font-black font-mono text-cyan-400 print:text-cyan-800 leading-tight">
-                            {analysis.estimatedTotalMarketSize}
+                            {analysis.estimatedTotalMarketSize} PDVs
                           </h3>
                           <span className="text-[10px] text-slate-500 mt-1 block leading-normal">
-                            estabelecimentos ou leads elegíveis para prospecção regional neste segmento.
+                            quantidade total estimada de PDVs potenciais para prospecção regional neste segmento.
                           </span>
                         </div>
 
@@ -456,10 +460,10 @@ export default function PresentationView({
                       <div className="md:col-span-7 rounded-2xl border border-white/5 bg-white/5 p-6 print-bg-card flex flex-col gap-4.5">
                         <div>
                           <span className="text-[10px] font-bold uppercase text-slate-400 font-mono block">
-                            Percentual de Penetração de Mercado
+                            Percentual de Cobertura Atendido
                           </span>
                           <span className="text-[10px] text-slate-500 mt-0.5 block">
-                            Representaçao do marketshare conquistado até o momento
+                            Representação do marketshare conquistado até o momento
                           </span>
                         </div>
 
@@ -472,13 +476,13 @@ export default function PresentationView({
                               style={{ width: `${Math.min(100, Math.max(1, penetrationRate))}%` }}
                             />
                             <span className="absolute inset-y-0 right-4 flex items-center text-[10px] font-mono font-extrabold text-white print:text-slate-900">
-                              {penetrationRate}% CONQUISTADO
+                              {penetrationRate}% ATENDIDO
                             </span>
                           </div>
                           <div className="flex justify-between text-[9px] font-mono text-slate-450 mt-1.5">
                             <span>0% (Início)</span>
                             <span>{seller.currentClients} de {analysis.estimatedTotalMarketSize} clientes</span>
-                            <span>100% (TAM Absoluto)</span>
+                            <span>100% (Potencial Total)</span>
                           </div>
                         </div>
 

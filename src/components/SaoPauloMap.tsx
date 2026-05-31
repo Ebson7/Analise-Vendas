@@ -424,8 +424,8 @@ export default function SaoPauloMap({
                 {activeSeller.analysis && (
                   <>
                     <div className="flex items-center justify-between text-slate-300">
-                      <span className="text-[9px] text-slate-550 font-semibold uppercase">TAM (Oportunidades)</span>
-                      <span className="text-cyan-400 font-bold">{activeSeller.analysis.estimatedTotalMarketSize} hubs</span>
+                      <span className="text-[9px] text-slate-550 font-semibold uppercase">PDVs Potenciais (Hab. / 300)</span>
+                      <span className="text-cyan-400 font-bold">{activeSeller.analysis.estimatedTotalMarketSize} PDVs</span>
                     </div>
 
                     <div className="flex items-center justify-between text-slate-300">
@@ -589,9 +589,9 @@ export default function SaoPauloMap({
               <>
                 <div className="h-8 w-px bg-white/10 hidden xl:block" />
                 <div className="text-left font-mono bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-xs">
-                  <span className="text-[9px] text-slate-500 block uppercase">TAM do Município</span>
+                  <span className="text-[9px] text-slate-500 block uppercase">PDVs Potenciais (Hab. / 300)</span>
                   <span className="font-bold text-cyan-400 leading-none">
-                    {activeSeller.analysis.estimatedTotalMarketSize} coops
+                    {activeSeller.analysis.estimatedTotalMarketSize} PDVs
                   </span>
                 </div>
 

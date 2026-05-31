@@ -115,6 +115,9 @@ Com base nas informações populacionais, socioeconômicas e demográficas da ci
       }
 
       const parsedAnalysis = JSON.parse(responseText);
+      if (parsedAnalysis.estimatedPopulation) {
+        parsedAnalysis.estimatedTotalMarketSize = Math.round(parsedAnalysis.estimatedPopulation / 300) || 1;
+      }
       res.json(parsedAnalysis);
     } catch (error: any) {
       console.error("Erro no processamento da IA para Potencial de Mercado:", error);
