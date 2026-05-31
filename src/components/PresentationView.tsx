@@ -57,7 +57,7 @@ export default function PresentationView({
     );
   }
 
-  const SLIDES_COUNT = 5;
+  const SLIDES_COUNT = 3;
 
   const handlePrint = () => {
     window.print();
@@ -170,7 +170,7 @@ export default function PresentationView({
               <FileText className="h-3.5 w-3.5 text-blue-400" />
               Módulo de Apresentação Comercial
             </div>
-            <h2 className="text-base font-bold text-white">Report Comercial: {seller.sellerName}</h2>
+            <h2 className="text-base font-bold text-white">Report Comercial: {seller.sellerName}{seller.phone && ` (${seller.phone})`}</h2>
           </div>
         </div>
 
@@ -262,7 +262,7 @@ export default function PresentationView({
           return (
             <div
               key={slideId}
-              className="print-slide-card relative w-full aspect-[16/10] md:h-[620px] rounded-3xl border border-white/10 bg-[#090a12] p-8 md:p-12 shadow-2xl flex flex-col justify-between transition-all duration-300 overflow-hidden"
+              className="print-slide-card relative w-full aspect-[16/10] max-md:aspect-auto max-md:min-h-[585px] md:h-[620px] rounded-3xl border border-white/10 bg-[#090a12] p-5 sm:p-8 md:p-12 shadow-2xl flex flex-col justify-between transition-all duration-300 overflow-auto sm:overflow-hidden"
               id={`slide-${slideId}`}
             >
               {/* Slide Background Subtle Grid Glowing Accents (Decor) */}
@@ -306,7 +306,7 @@ export default function PresentationView({
                         <span className="text-blue-400 print:text-blue-700">Potencial Demográfico</span>
                       </h1>
                       <p className="text-slate-405 text-sm max-w-xl leading-relaxed font-light print:text-slate-650">
-                        Um mapeamento analítico completo do mercado de atuação de <strong className="text-white font-semibold print:text-slate-800">{seller.sellerName}</strong> na municipalidade de <strong className="text-white font-semibold print:text-slate-800">{seller.city}</strong>.
+                        Um mapeamento analítico completo do mercado de atuação de <strong className="text-white font-semibold print:text-slate-800">{seller.sellerName}</strong>{seller.phone && ` (${seller.phone})`} na municipalidade de <strong className="text-white font-semibold print:text-slate-800">{seller.city}</strong>.
                       </p>
                     </div>
 
@@ -495,133 +495,6 @@ export default function PresentationView({
                               ? "Consolidação Média — Espaço propício para otimização estratégica"
                               : "Alta Ocupação — Foco em blindagem e serviços complementares"}
                           </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SLIDE 04: TARGET SECTORS & NICHE RECOMMENDATIONS */}
-                {slideId === 3 && (
-                  <div className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <Target className="h-5 w-5 text-indigo-400 print:text-indigo-700" />
-                      <h2 className="text-lg md:text-xl font-extrabold text-white print:text-slate-900">
-                        Estratégia Posicional & Alvos Recomendados
-                      </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {analysis.nicheRecommendations.slice(0, 3).map((recommendation, idx) => (
-                        <div
-                          key={idx}
-                          className="rounded-2xl border border-white/5 bg-white/5 p-4.5 flex gap-3 transition-all hover:bg-white/10 print-bg-card"
-                        >
-                          <div className="h-7 w-7 shrink-0 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center font-mono font-extrabold text-xs text-white">
-                            {idx + 1}
-                          </div>
-                          <div>
-                            <span className="text-[9px] uppercase font-bold text-slate-450 font-mono tracking-wider">
-                              Direcionamento {idx + 1}
-                            </span>
-                            <p className="mt-1.5 text-[11px] leading-relaxed text-slate-250 print:text-slate-850 font-medium">
-                              {recommendation}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="rounded-2xl border border-blue-500/10 bg-blue-500/5 p-4 flex gap-3 items-start border-l-4 border-l-blue-500 print-bg-card print:border-l-slate-400 print:p-4.5">
-                      <Sparkles className="h-5 w-5 text-amber-400 shrink-0 mt-0.5 print:text-blue-700" />
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-200 print:text-slate-950 uppercase tracking-wider font-mono">
-                          Recomendação Prática de Abordagem Mapeada
-                        </h4>
-                        <p className="mt-1 text-[11px] text-slate-400 leading-relaxed print:text-slate-705">
-                          Priorize visitas e contatos imediatos com as recomendações listadas acima, focando na proposta de valor de alta lucratividade estruturada para o perfil de PIB de {analysis.cityName}.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SLIDE 05: PLANO DE AÇÃO TÁTICO */}
-                {slideId === 4 && (
-                  <div className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-emerald-400 print:text-emerald-700" />
-                      <h2 className="text-lg md:text-xl font-extrabold text-white print:text-slate-900">
-                        Plano de Ação Tático & Diretrizes Operacionais
-                      </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-                      <div className="md:col-span-8 flex flex-col gap-2.5">
-                        <span className="text-[10px] font-bold uppercase text-slate-450 font-mono tracking-widest block mb-1">
-                          CRONOGRAMA DE ATIVIDADES OPERACIONAIS
-                        </span>
-
-                        <div className="flex flex-col gap-2">
-                          {analysis.actionPlan.map((step, idx) => {
-                            const isDone = !!completedSteps[idx];
-                            return (
-                              <div
-                                key={idx}
-                                className={`flex items-start gap-3 rounded-xl border p-3.5 print-bg-card transition-all ${
-                                  isDone
-                                    ? "border-emerald-500/10 bg-emerald-500/5 text-slate-450 line-through print:opacity-60"
-                                    : "border-white/5 bg-black/20 text-slate-250 font-semibold"
-                                }`}
-                              >
-                                <span className="mt-0.5 shrink-0">
-                                  {isDone ? (
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-500 print:text-emerald-700" />
-                                  ) : (
-                                    <div className="h-4 w-4 rounded-full border border-slate-500 shrink-0 print:border-slate-800" />
-                                  )}
-                                </span>
-                                <div className="flex justify-between items-center w-full">
-                                  <span className="text-[11px] leading-snug print:text-slate-800">{step}</span>
-                                  {isDone && (
-                                    <span className="text-[8px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold font-mono uppercase print:bg-emerald-50 print:text-emerald-800">
-                                      Concluído
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <div className="md:col-span-4 rounded-2xl border border-white/5 bg-white/5 p-5 print-bg-card flex flex-col gap-4">
-                        <div className="flex items-center gap-2">
-                          <Award className="h-4.5 w-4.5 text-blue-400 print:text-blue-700" />
-                          <span className="text-[10px] font-bold uppercase text-slate-350 print:text-slate-950 tracking-wider font-mono">
-                            Metas Estabelecidas
-                          </span>
-                        </div>
-
-                        <div className="flex flex-col gap-3 font-mono">
-                          <div className="border-b border-white/5 pb-2">
-                            <span className="text-[9px] text-slate-500 block">NÍVEL DE SUCESSO ESPERADO</span>
-                            <span className="text-xs font-bold text-slate-300 print:text-slate-900 uppercase">
-                              Alto Potencial Regional
-                            </span>
-                          </div>
-                          <div className="border-b border-white/5 pb-2">
-                            <span className="text-[9px] text-slate-500 block">TAXA MÍNIMA DE CONVERSÃO</span>
-                            <span className="text-xs font-bold text-slate-300 print:text-slate-900 font-mono">
-                              15% a 20% do TAM
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-slate-500 block">COBERTURA DO VENDEDOR</span>
-                            <span className="text-xs font-bold text-slate-300 print:text-slate-900">
-                              Visitas presenciais e híbridas
-                            </span>
-                          </div>
                         </div>
                       </div>
                     </div>

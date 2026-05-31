@@ -390,10 +390,10 @@ export default function SaoPauloMap({
 
           {/* FOCUS MODE OVERLAY HUD - Dynamic overlay matching active seller on the Google Map */}
           {mapMode === "focus" && activeSeller && (
-            <div className="absolute top-4 right-4 max-w-[280px] z-10 bg-slate-950/90 hover:bg-slate-950/95 border border-white/10 hover:border-blue-500/20 p-4 rounded-xl shadow-2xl backdrop-blur-xl transition-all animate-fade-in group/hud font-sans">
+            <div className="absolute top-3 right-3 left-3 sm:left-auto sm:top-4 sm:right-4 sm:max-w-[280px] z-10 bg-slate-950/90 hover:bg-slate-950/95 border border-white/10 hover:border-blue-500/20 p-3 sm:p-4 rounded-xl shadow-2xl backdrop-blur-xl transition-all animate-fade-in group/hud font-sans">
               
               {/* Glassmorphic header card pin */}
-              <div className="flex items-center gap-2 border-b border-white/5 pb-2.5 mb-2.5">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-2 mb-2 sm:pb-2.5 sm:mb-2.5">
                 <div className="h-7 w-7 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">
                   <MapPin className="h-4 w-4 text-blue-400 group-hover/hud:scale-110 transition-transform" />
                 </div>
@@ -408,7 +408,7 @@ export default function SaoPauloMap({
               </div>
 
               {/* Body data rows */}
-              <div className="flex flex-col gap-2.5 text-[11px] font-mono select-none">
+              <div className="flex flex-col gap-2 text-[11px] font-mono select-none">
                 <div className="flex items-center justify-between text-slate-300">
                   <span className="text-[9px] text-slate-500 font-semibold uppercase">Cidade Atendida</span>
                   <span className="font-sans font-bold text-white text-right truncate bg-slate-800/40 px-2 py-0.5 rounded">
@@ -422,7 +422,7 @@ export default function SaoPauloMap({
                 </div>
 
                 {activeSeller.analysis && (
-                  <>
+                  <div className="hidden sm:flex flex-col gap-2.5 border-t border-white/5 pt-2.5 mt-1">
                     <div className="flex items-center justify-between text-slate-300">
                       <span className="text-[9px] text-slate-550 font-semibold uppercase">PDVs Potenciais (Hab. / 300)</span>
                       <span className="text-cyan-400 font-bold">{activeSeller.analysis.estimatedTotalMarketSize} PDVs</span>
@@ -430,7 +430,9 @@ export default function SaoPauloMap({
 
                     <div className="flex items-center justify-between text-slate-300">
                       <span className="text-[9px] text-slate-550 font-semibold uppercase">PIB Per Capita</span>
-                      <span className="text-slate-300 text-[10px]">{activeSeller.analysis.gdpPerCapita}</span>
+                      <span className="text-slate-300 text-[10px] truncate max-w-[140px]" title={activeSeller.analysis.gdpPerCapita}>
+                        {activeSeller.analysis.gdpPerCapita}
+                      </span>
                     </div>
 
                     {/* Expansion score bar */}
@@ -448,7 +450,7 @@ export default function SaoPauloMap({
                         />
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             </div>

@@ -15,6 +15,7 @@ export interface MarketAnalysis {
 export interface SellerRecord {
   id: string;
   sellerName: string;
+  phone?: string;
   city: string;
   segment: string;
   currentClients: number;

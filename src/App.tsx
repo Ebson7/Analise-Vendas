@@ -23,7 +23,8 @@ import {
   Search,
   CheckSquare,
   Square,
-  FileText
+  FileText,
+  Phone
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -48,6 +49,7 @@ const DEFAULT_SELLERS: SellerRecord[] = [
   {
     id: "seller-1",
     sellerName: "Juliana Mendes",
+    phone: "(19) 98844-3321",
     city: "Campinas - SP",
     segment: "Alimentos e Bebidas",
     currentClients: 24,
@@ -77,6 +79,7 @@ const DEFAULT_SELLERS: SellerRecord[] = [
   {
     id: "seller-2",
     sellerName: "Roberto Souza",
+    phone: "(31) 99112-4455",
     city: "Belo Horizonte - MG",
     segment: "SaaS & Software B2B",
     currentClients: 8,
@@ -106,6 +109,7 @@ const DEFAULT_SELLERS: SellerRecord[] = [
   {
     id: "seller-3",
     sellerName: "Aline Santos",
+    phone: "(62) 98115-9988",
     city: "Goiânia - GO",
     segment: "Serviços Médicos & Saúde",
     currentClients: 15,
@@ -175,6 +179,7 @@ export default function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
     sellerName: "",
+    phone: "",
     city: "",
     currentClients: 1,
     segment: "Varejo Geral"
@@ -282,6 +287,7 @@ export default function App() {
         const newRecord: SellerRecord = {
           id: `seller-${Date.now()}`,
           sellerName: formData.sellerName,
+          phone: formData.phone || "",
           city: generated.cityName,
           segment: finalSegment,
           currentClients: Number(formData.currentClients) || 0,
@@ -296,6 +302,7 @@ export default function App() {
         // Reset form
         setFormData({
           sellerName: "",
+          phone: "",
           city: "",
           currentClients: 1,
           segment: "Varejo Geral"
@@ -342,6 +349,7 @@ export default function App() {
       const newRecord: SellerRecord = {
         id: `seller-${Date.now()}`,
         sellerName: formData.sellerName,
+        phone: formData.phone || "",
         city: rawAnalysis.cityName || formData.city,
         segment: finalSegment,
         currentClients: Number(formData.currentClients) || 0,
@@ -356,6 +364,7 @@ export default function App() {
       // Reset form
       setFormData({
         sellerName: "",
+        phone: "",
         city: "",
         currentClients: 1,
         segment: "Varejo Geral"
@@ -381,6 +390,7 @@ export default function App() {
         const newRecord: SellerRecord = {
           id: `seller-${Date.now()}`,
           sellerName: formData.sellerName,
+          phone: formData.phone || "",
           city: fallbackData.cityName,
           segment: finalSegment,
           currentClients: Number(formData.currentClients) || 0,
@@ -395,6 +405,7 @@ export default function App() {
         // Reset form
         setFormData({
           sellerName: "",
+          phone: "",
           city: "",
           currentClients: 1,
           segment: "Varejo Geral"
@@ -637,6 +648,12 @@ export default function App() {
                                 <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                                 <span className="font-medium truncate max-w-[160px]">{seller.city}</span>
                               </div>
+                              {seller.phone && (
+                                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400">
+                                  <Phone className="h-3 w-3 shrink-0 text-slate-500" />
+                                  <span className="font-medium truncate font-mono max-w-[160px]">{seller.phone}</span>
+                                </div>
+                              )}
                               <div className="mt-1.5 inline-flex items-center gap-1 text-[9px] bg-white/10 border border-white/5 text-slate-300 px-2 py-0.5 rounded font-bold uppercase tracking-widest">
                                 {seller.segment}
                               </div>
@@ -700,6 +717,11 @@ export default function App() {
                       </h2>
                       <p className="text-slate-400 text-xs mt-1">
                         Território: <span className="text-slate-200 font-semibold">{activeSeller.city}</span> &bull; Segmento: <span className="text-slate-300 font-semibold">{activeSeller.segment}</span>
+                        {activeSeller.phone && (
+                          <>
+                            {" "}&bull; Telefone: <span className="text-slate-300 font-semibold font-mono">{activeSeller.phone}</span>
+                          </>
+                        )}
                       </p>
                     </div>
 
@@ -902,68 +924,7 @@ export default function App() {
                         </p>
                       </div>
 
-                      {/* Niche recommendations & Step Checklist layout (Split row) */}
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Targeted recommendations */}
-                        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-sm">
-                          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-200 flex items-center gap-1.5 font-mono">
-                            <Target className="h-4 w-4 text-blue-400" />
-                            Alvos Recomendados (Targeting)
-                          </h3>
-                          <p className="text-slate-450 text-[11px] mt-0.5 font-light">Onde e quem o vendedor deve prospectar primeiro</p>
 
-                          <div className="mt-4 flex flex-col gap-3 font-mono">
-                            {activeSeller.analysis.nicheRecommendations.map((recommendation, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-start gap-3 rounded-xl border border-white/5 bg-black/25 p-3.5 shadow-none transition-all hover:bg-white/10 hover:-translate-y-0.5 duration-150"
-                              >
-                                <span className="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-[10px] font-extrabold text-white">
-                                  {idx + 1}
-                                </span>
-                                <p className="text-xs font-semibold text-slate-300 leading-snug">
-                                  {recommendation}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Interactive Step Action checklist */}
-                        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-sm">
-                          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-200 flex items-center gap-1.5 font-mono">
-                            <Activity className="h-4 w-4 text-emerald-400" />
-                            Plano Tático Operacional ({activeSeller.sellerName})
-                          </h3>
-                          <p className="text-slate-450 text-[11px] mt-0.5 font-light">Marque as etapas executadas deste plano de prospecção</p>
-
-                          <div className="mt-4 flex flex-col gap-2.5">
-                            {activeSeller.analysis.actionPlan.map((step, idx) => {
-                              const isDone = !!completedSteps[idx];
-                              return (
-                                <div
-                                  key={idx}
-                                  onClick={() => toggleStep(idx)}
-                                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${
-                                    isDone
-                                      ? "border-emerald-500/20 bg-emerald-500/5 text-slate-500 line-through"
-                                      : "border-white/5 bg-black/25 hover:bg-white/5 hover:border-white/10 text-slate-300 font-semibold"
-                                  }`}
-                                >
-                                  <button className="shrink-0 mt-0.5 text-slate-450 hover:text-indigo-400 cursor-pointer">
-                                    {isDone ? (
-                                      <CheckSquare className="h-4.5 w-4.5 text-emerald-500" />
-                                    ) : (
-                                      <Square className="h-4.5 w-4.5 text-slate-500 hover:text-slate-300" />
-                                    )}
-                                  </button>
-                                  <span className="text-xs leading-relaxed font-semibold">{step}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
                     </React.Fragment>
                   ) : (
                     /* Initial pending processing layout */
@@ -999,7 +960,7 @@ export default function App() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0d0e14]/95 p-6 shadow-2xl backdrop-blur-2xl"
+            className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0d0e14]/95 p-5 sm:p-6 shadow-2xl backdrop-blur-2xl max-h-[92vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-white/5 pb-4">
               <div className="flex items-center gap-2">
@@ -1062,6 +1023,17 @@ export default function App() {
                     placeholder="Ex: Lucas Oliveira"
                     value={formData.sellerName}
                     onChange={(e) => setFormData({ ...formData, sellerName: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:bg-black/60 focus:outline-none text-white placeholder-slate-600 transition-all font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Telefone de Contato</label>
+                  <input
+                    type="tel"
+                    placeholder="Ex: (11) 99999-9999"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:bg-black/60 focus:outline-none text-white placeholder-slate-600 transition-all font-mono"
                   />
                 </div>
