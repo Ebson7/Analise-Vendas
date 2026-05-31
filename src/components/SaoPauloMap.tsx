@@ -378,7 +378,7 @@ export default function SaoPauloMap({
                     </div>
                     <div>
                       <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider block font-mono">
-                        VENDEDOR REGISTRADO COOPERADO
+                        VENDEDOR REGISTRADO
                       </span>
                       <h4 className="text-sm font-bold text-white">{hoveredSeller.sellerName}</h4>
                       <p className="text-[11px] text-slate-400">Atende: <span className="font-semibold text-slate-200">{hoveredSeller.city}</span> &bull; Canal: {hoveredSeller.segment}</p>
@@ -395,7 +395,7 @@ export default function SaoPauloMap({
                         <div className="h-8 w-px bg-white/10" />
                         <div className="text-left font-mono">
                           <span className="text-[10px] text-slate-500 block">TAM (NICHOS)</span>
-                          <span className="text-xs font-bold text-cyan-400">{hoveredSeller.analysis.estimatedTotalMarketSize} coops</span>
+                          <span className="text-xs font-bold text-cyan-400">{hoveredSeller.analysis.estimatedTotalMarketSize} clientes</span>
                         </div>
 
                       </>
@@ -436,7 +436,7 @@ export default function SaoPauloMap({
 
                 <div className="flex items-center justify-between text-slate-300">
                   <span className="text-[9px] text-slate-550 font-semibold uppercase">Parceiros Ativos</span>
-                  <span className="text-blue-400 font-bold">{activeSeller.currentClients} cooperados</span>
+                  <span className="text-blue-400 font-bold">{activeSeller.currentClients} clientes</span>
                 </div>
 
                 {activeSeller.analysis && (
